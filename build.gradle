@@ -1,0 +1,3 @@
+apply plugin: 'net.karlmartens.dotnet'
+
+dotnet.solution = "Learn.sln"
