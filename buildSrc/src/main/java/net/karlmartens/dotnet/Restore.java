@@ -16,6 +16,7 @@ public class Restore extends DotnetDefaultTask {
             List<String> args = new ArrayList<>();
             args.add("restore");
             whenHasValue(ext.getSolution(), args::add);
+            whenHasValue(ext.getRuntime(), addNamedParameter(args, "--runtime"));
 
             execSpec.setArgs(args);
         });

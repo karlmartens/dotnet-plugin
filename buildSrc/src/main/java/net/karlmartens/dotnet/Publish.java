@@ -8,28 +8,33 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Publish extends DotnetDefaultTask {
 
+    public static final String PACKAGE_ID = "PackageId";
+    public static final String PACKAGE_VERSION = "PackageVersion";
     private boolean _testUpToDate = true;
     private boolean _includeSymbols = false;
+    private boolean _includeSource = false;
     private String _charset = "UTF-8";
     private String _nugetExecutable = "nuget";
-    private List<Replacement> _replacements = new ArrayList<>();
+    private List<AttributeValue> _parameters = new ArrayList<>();
     private String _repository = "";
     private String _apiKey = "";
 
-    public void addReplacement(String attribute, String value) {
-        _replacements.add(new Replacement(attribute, value));
+    public void addParameter(String attribute, String value) {
+        _parameters.add(new AttributeValue(attribute, value));
     }
 
-    public void setIncludeSymbols(boolean includeSymbols) {
-        _includeSymbols = includeSymbols;
+    public void setIncludeSymbols(boolean include) {
+        _includeSymbols = include;
+    }
+
+    public void setIncludeSource(boolean include) {
+        _includeSource = include;
     }
 
     public void setCharset(String charset) {
@@ -63,42 +68,48 @@ public class Publish extends DotnetDefaultTask {
     }
 
     private void runPublish(File file) {
-        Charset charset = Charset.forName(_charset);
-        String original = readContents(file, charset);
-
-        String updated = doReplacements(original);
-
-        String packageId = extractTag(updated, "PackageId");
-        String version = extractTag(updated, "PackageVersion");
-        if (uptoDate(packageId, version)) {
-            System.out.println(String.format("Skipping %s(%s) was already published.", packageId, version));
-            return;
+        if (_testUpToDate) {
+            VersionInfo version = determineVersion(file);
+            System.out.println(String.format("Checking %s is already published.", version));
+            if (uptoDate(version)) {
+                System.out.println(String.format("Skipping %s was already published.", version));
+                return;
+            }
         }
 
-        if (!_replacements.isEmpty())
-            writeContents(file, updated, charset);
-
         File packagePath = doPack(file);
-
-        if (!_replacements.isEmpty())
-            writeContents(file, original, charset);
 
         doPush(packagePath);
     }
 
-    private boolean uptoDate(String packageId, String version) {
-        if (!_testUpToDate)
-            return false;
+    private VersionInfo determineVersion(File file) {
+        Charset charset = Charset.forName(_charset);
+        String original = readContents(file, charset);
 
-        System.out.println(String.format("Checking '%s' for version '%s' is already published.", packageId, version));
+        Map<String, String> params = new HashMap<>();
+        whenHasValue(extractTag(original, PACKAGE_ID), v -> params.put(PACKAGE_ID, v));
+        whenHasValue(extractTag(original, PACKAGE_VERSION), v -> params.put(PACKAGE_VERSION, v));
 
+        for (AttributeValue av : _parameters) {
+            whenHasValue(av._value, v -> params.put(av._attribute, v));
+        }
+
+        String packageId = params.get(PACKAGE_ID);
+        String packageVersion = params.get(PACKAGE_VERSION);
+        if (packageId == null || packageVersion == null)
+            return null;
+
+        return new VersionInfo(packageId, packageVersion);
+    }
+
+    private boolean uptoDate(VersionInfo info) {
         try  (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             getProject().exec(execSpec -> {
                 execSpec.setExecutable(_nugetExecutable);
 
                 List<String> args = new ArrayList<>();
                 args.add("list");
-                args.add(packageId);
+                args.add(info._packageId);
                 args.add("-Source");
                 args.add(_repository);
                 args.add("-Prerelease");
@@ -110,18 +121,10 @@ public class Publish extends DotnetDefaultTask {
             });
 
             String output = out.toString();
-            return output.contains(version);
+            return output.contains(info._version);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
-    }
-
-    private String doReplacements(String original) {
-        String updated = original;
-        for (Replacement r : _replacements) {
-            updated = updated.replaceAll("(<" + r._attribute + ">).*(</" + r._attribute + ">)", "$1" + r._value + "$2");
-        }
-        return updated;
     }
 
     private File doPack(File file) {
@@ -133,9 +136,16 @@ public class Publish extends DotnetDefaultTask {
                 List<String> args = new ArrayList<>();
                 args.add("pack");
                 args.add(file.getAbsolutePath());
+                whenHasValue(ext.getConfiguration(), addNamedParameter(args, "--configuration"));
+                whenHasValue(ext.getRuntime(), addNamedParameter(args, "--runtime"));
                 args.add("--no-restore");
                 args.add("--no-build");
-                when(_includeSymbols, () -> args.add("--include-symbols"));
+                when(_includeSymbols, addParameter(args,"--include-symbols"));
+                when(_includeSource, addParameter(args,"--include-symbols"));
+
+                for (AttributeValue av : _parameters) {
+                    args.add(String.format("/p:%s=\"%s\"", av._attribute, av._value));
+                }
 
                 execSpec.setArgs(args);
                 execSpec.setStandardOutput(out);
@@ -199,19 +209,26 @@ public class Publish extends DotnetDefaultTask {
         }
     }
 
-    private static void writeContents(File file, String content, Charset charset) {
-        try {
-            Files.write(file.toPath(), content.getBytes(charset), StandardOpenOption.TRUNCATE_EXISTING);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
+    private static class VersionInfo {
+        private String _packageId;
+        private String _version;
+
+        private VersionInfo(String packageId, String version) {
+            _packageId= Objects.requireNonNull(packageId);
+            _version = Objects.requireNonNull(version);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s(%s)", _packageId, _version);
         }
     }
 
-    private static class Replacement {
+    private static class AttributeValue {
         private String _attribute;
         private String _value;
 
-        private Replacement(String attribute, String value) {
+        private AttributeValue(String attribute, String value) {
             _attribute = Objects.requireNonNull(attribute);
             _value = Objects.requireNonNull(value);
         }

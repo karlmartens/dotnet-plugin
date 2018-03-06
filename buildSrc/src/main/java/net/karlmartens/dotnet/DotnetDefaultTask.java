@@ -4,6 +4,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Internal;
 
 import java.io.File;
+import java.util.List;
 import java.util.function.Consumer;
 
 class DotnetDefaultTask extends DefaultTask {
@@ -40,6 +41,17 @@ class DotnetDefaultTask extends DefaultTask {
             baseDir[0] = file.getAbsoluteFile().getParent();
         });
         return baseDir[0];
+    }
+
+    protected final Consumer<String> addNamedParameter(List<String> args, String name) {
+        return value -> {
+            args.add(name);
+            args.add(value);
+        };
+    }
+
+    protected final Runnable addParameter(List<String> args, String parameter) {
+        return () -> args.add(parameter);
     }
 
 

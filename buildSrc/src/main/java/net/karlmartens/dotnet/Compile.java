@@ -15,8 +15,11 @@ public class Compile extends DotnetDefaultTask {
 
             List<String> args = new ArrayList<>();
             args.add("build");
-            args.add("--no-restore");
             whenHasValue(ext.getSolution(), args::add);
+            whenHasValue(ext.getConfiguration(), addNamedParameter(args, "--configuration"));
+            whenHasValue(ext.getFramework(), addNamedParameter(args, "--framework"));
+            whenHasValue(ext.getRuntime(), addNamedParameter(args, "--runtime"));
+            args.add("--no-restore");
 
             execSpec.setArgs(args);
         });

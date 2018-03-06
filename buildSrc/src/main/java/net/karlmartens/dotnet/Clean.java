@@ -18,6 +18,9 @@ public class Clean extends DotnetDefaultTask {
             List<String> args = new ArrayList<>();
             args.add("clean");
             whenHasValue(ext.getSolution(), args::add);
+            whenHasValue(ext.getConfiguration(), addNamedParameter(args, "--configuration"));
+            whenHasValue(ext.getFramework(), addNamedParameter(args, "--framework"));
+            whenHasValue(ext.getRuntime(), addNamedParameter(args, "--runtime"));
 
             execSpec.setArgs(args);
         });

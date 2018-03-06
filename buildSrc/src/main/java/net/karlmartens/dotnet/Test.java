@@ -27,13 +27,15 @@ public class Test extends DotnetDefaultTask {
 
             List<String> args = new ArrayList<>();
             args.add("test");
+            args.add(file.getAbsolutePath());
+            whenHasValue(ext.getConfiguration(), addNamedParameter(args, "--configuration"));
+            whenHasValue(ext.getFramework(), addNamedParameter(args, "--framework"));
             args.add("--no-restore");
             args.add("--no-build");
             args.add("--logger");
             args.add(String.format(Locale.US, "\"trx;LogFileName=%s.trx\"", file.getName()));
             args.add("--results-directory");
             args.add("../TestResults");
-            args.add(file.getAbsolutePath());
 
             execSpec.setArgs(args);
         });
