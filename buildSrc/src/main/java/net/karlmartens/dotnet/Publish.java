@@ -136,7 +136,7 @@ public class Publish extends DotnetDefaultTask {
 
                 List<String> args = new ArrayList<>();
                 args.add("pack");
-                args.add(file.getAbsolutePath());
+                args.add(quote(file.getAbsolutePath()));
                 whenHasValue(ext.getConfiguration(), addNamedParameter(args, "--configuration"));
                 whenHasValue(ext.getRuntime(), addNamedParameter(args, "--runtime"));
                 args.add("--no-restore");
