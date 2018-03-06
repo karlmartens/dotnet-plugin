@@ -3,6 +3,7 @@ package net.karlmartens.dotnet;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -13,8 +14,8 @@ public class Test extends DotnetDefaultTask {
     void exec() {
         DotnetExtension ext = getExtension();
 
-        String baseDir = directoryName(ext.getSolution());
-        getProject().fileTree(baseDir, t -> {
+        File projectDir = getProject().getProjectDir();
+        getProject().fileTree(projectDir.toString(), t -> {
             t.include(ext.getTestPattern());
         }).forEach(this::runTest);
     }

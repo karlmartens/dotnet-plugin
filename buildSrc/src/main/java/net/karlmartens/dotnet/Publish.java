@@ -60,8 +60,9 @@ public class Publish extends DotnetDefaultTask {
     @TaskAction
     void exec() {
         DotnetExtension ext = getExtension();
-        String baseDir = directoryName(ext.getSolution());
-        getProject().fileTree(baseDir, t -> {
+
+        File projectDir = getProject().getProjectDir();
+        getProject().fileTree(projectDir.toString(), t -> {
             t.include(ext.getProjectPattern());
             t.exclude(ext.getTestPattern());
         }).forEach(this::runPublish);
