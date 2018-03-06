@@ -13,6 +13,7 @@ public class DotnetPlugin implements Plugin<Project> {
     private static final String COMPILE_TASK = "dotnetCompile";
     private static final String TEST_TASK = "dotnetTest";
     private static final String DOCS_TASK = "dotnetDocs";
+    private static final String PUBLISH_TASK = "dotnetPublish";
 
     @Override
     public void apply(Project project) {
@@ -40,6 +41,10 @@ public class DotnetPlugin implements Plugin<Project> {
         project.getTasks().create(DOCS_TASK, Docs.class, task -> {
             task.setExtension(extension);
             task.setDependsOn(Arrays.asList(COMPILE_TASK));
+        });
+        project.getTasks().create(PUBLISH_TASK, Publish.class, task -> {
+            task.setExtension(extension);
+            task.setDependsOn(Arrays.asList(TEST_TASK));
         });
     }
 }

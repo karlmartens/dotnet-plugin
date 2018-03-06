@@ -20,6 +20,12 @@ class DotnetDefaultTask extends DefaultTask {
         return _ext;
     }
 
+    protected static void when(boolean b, Runnable r) {
+        if (b) {
+            r.run();
+        }
+    }
+
     protected static void whenHasValue(String value, Consumer<String> consumer) {
         if (value != null && !value.isEmpty()) {
             consumer.accept(value);

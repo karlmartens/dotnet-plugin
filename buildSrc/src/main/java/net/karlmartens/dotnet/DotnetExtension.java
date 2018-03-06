@@ -1,12 +1,19 @@
 package net.karlmartens.dotnet;
 
+import org.apache.tools.ant.taskdefs.condition.Os;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class DotnetExtension {
 
     private String _executable = "dotnet";
     private String _solution = "";
+    private String _projectPattern = "**/*.csproj";
     private String _testPattern = "**/*Test.csproj";
-    private String _docsExecutable = "docfx";
+    private String _docsHome = null;
     private String _docsSrc = "./docs/docfx.json";
+
 
     public void setExecutable(String executable) {
         _executable = executable;
@@ -20,6 +27,14 @@ public class DotnetExtension {
 
     public String getSolution() { return _solution; }
 
+    public String getProjectPattern() {
+        return _projectPattern;
+    }
+
+    public void setProjectPatten(String pattern) {
+        _projectPattern = pattern;
+    }
+
     public String getTestPattern() {
         return _testPattern;
     }
@@ -28,12 +43,24 @@ public class DotnetExtension {
         _testPattern = pattern;
     }
 
-    public String getDocsExecutable() {
-        return _docsExecutable;
+    public String getDocsHome() {
+        return _docsHome;
     }
 
-    public void setDocsExecutable(String executable) {
-        _docsExecutable = executable;
+    public void setDocsHome(String path) {
+        _docsHome = path;
+    }
+
+    public String getDocsExecutable() {
+        String executable = "docfx";
+        if (Os.isFamily(Os.FAMILY_WINDOWS))
+            executable += ".exe";
+
+        if (_docsHome == null)
+            return executable;
+
+        Path path = Paths.get(_docsHome, executable);
+        return path.toString();
     }
 
     public String getDocsSrc() {
