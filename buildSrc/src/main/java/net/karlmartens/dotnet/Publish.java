@@ -74,9 +74,9 @@ public class Publish extends DotnetDefaultTask {
     private void runPublish(File file) {
         if (_testUpToDate) {
             VersionInfo version = determineVersion(file);
-            LOGGER.info("Checking {} for already being published.", version);
+            LOGGER.quiet("Checking {} for already being published.", version);
             if (uptoDate(version)) {
-                LOGGER.info("Skipping {} was already published.", version);
+                LOGGER.quiet("Skipping {} was already published.", version);
                 return;
             }
         }
@@ -181,7 +181,7 @@ public class Publish extends DotnetDefaultTask {
             Matcher matcher = pattern.matcher(output);
             if (matcher.find()) {
                 String packagePath = matcher.group(1);
-                LOGGER.info("Package '{}' created.", packagePath);
+                LOGGER.quiet("Package '{}' created.", packagePath);
                 return new File(packagePath);
             }
             return null;
@@ -195,7 +195,7 @@ public class Publish extends DotnetDefaultTask {
             throw new RuntimeException("Failed to generate nuget package. Nothing to publish.");
         }
 
-        LOGGER.info("Publishing '{}' to repository '{}'", file.getAbsoluteFile(), _repository);
+        LOGGER.quiet("Publishing '{}' to repository '{}'", file.getAbsoluteFile(), _repository);
         DotnetExtension ext = getExtension();
         getProject().exec(execSpec -> {
             execSpec.setExecutable(ext.getExecutable());
