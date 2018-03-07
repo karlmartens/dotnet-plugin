@@ -28,7 +28,7 @@ public class Test extends DotnetDefaultTask {
 
             List<String> args = new ArrayList<>();
             args.add("test");
-            args.add(quote(file.getAbsolutePath()));
+            args.add(file.getAbsolutePath());
             whenHasValue(ext.getConfiguration(), addNamedParameter(args, "--configuration"));
             whenHasValue(ext.getFramework(), addNamedParameter(args, "--framework"));
             args.add("--no-restore");

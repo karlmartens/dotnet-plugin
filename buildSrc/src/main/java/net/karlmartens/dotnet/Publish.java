@@ -149,7 +149,7 @@ public class Publish extends DotnetDefaultTask {
 
                     List<String> args = new ArrayList<>();
                     args.add("pack");
-                    args.add(quote(file.getAbsolutePath()));
+                    args.add(file.getAbsolutePath());
                     whenHasValue(ext.getConfiguration(), addNamedParameter(args, "--configuration"));
                     whenHasValue(ext.getRuntime(), addNamedParameter(args, "--runtime"));
                     args.add("--no-restore");
@@ -166,7 +166,7 @@ public class Publish extends DotnetDefaultTask {
                     execSpec.setErrorOutput(err);
                 });
             } catch (Throwable t) {
-                LOGGER.error(out.toString());
+                LOGGER.error("\n" + out.toString());
                 LOGGER.error(err.toString());
                 LOGGER.error("", t);
                 throw new RuntimeException(t);
