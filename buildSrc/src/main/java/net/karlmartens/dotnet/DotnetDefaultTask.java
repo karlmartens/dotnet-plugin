@@ -55,7 +55,9 @@ class DotnetDefaultTask extends DefaultTask {
     }
 
     protected final String quote(String str) {
-        return "\"" + str + "\"";
+        String escapedStr = str.replaceAll("\\\\", "\\\\\\\\");
+        escapedStr = escapedStr.replace("\"", "\\\\\"");
+        return "\"" + escapedStr + "\"";
     }
 
 }
