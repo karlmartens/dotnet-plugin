@@ -158,7 +158,7 @@ public class Publish extends DotnetDefaultTask {
                     when(_includeSource, addParameter(args, "--include-symbols"));
 
                     for (AttributeValue av : _parameters) {
-                        args.add(String.format("/p:%s=\"%s\"", av._attribute, av._value));
+                        args.add(String.format("\"/p:%s=%s\"", av._attribute, av._value));
                     }
 
                     execSpec.setArgs(args);
