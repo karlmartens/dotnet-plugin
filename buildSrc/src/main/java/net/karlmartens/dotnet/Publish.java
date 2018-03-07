@@ -1,5 +1,7 @@
 package net.karlmartens.dotnet;
 
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.ByteArrayOutputStream;
@@ -7,12 +9,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Publish extends DotnetDefaultTask {
+
+    private static Logger LOGGER = Logging.getLogger(Publish.class);
 
     public static final String PACKAGE_ID = "PackageId";
     public static final String PACKAGE_VERSION = "PackageVersion";
@@ -71,9 +74,9 @@ public class Publish extends DotnetDefaultTask {
     private void runPublish(File file) {
         if (_testUpToDate) {
             VersionInfo version = determineVersion(file);
-            System.out.println(String.format("Checking %s is already published.", version));
+            LOGGER.info("Checking {} for already being published.", version);
             if (uptoDate(version)) {
-                System.out.println(String.format("Skipping %s was already published.", version));
+                LOGGER.info("Skipping {} was already published.", version);
                 return;
             }
         }
@@ -104,22 +107,30 @@ public class Publish extends DotnetDefaultTask {
     }
 
     private boolean uptoDate(VersionInfo info) {
-        try  (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            getProject().exec(execSpec -> {
-                execSpec.setExecutable(_nugetExecutable);
+        try  (ByteArrayOutputStream out = new ByteArrayOutputStream();
+              ByteArrayOutputStream err = new ByteArrayOutputStream()) {
+            try {
+                getProject().exec(execSpec -> {
+                    execSpec.setExecutable(_nugetExecutable);
 
-                List<String> args = new ArrayList<>();
-                args.add("list");
-                args.add(info._packageId);
-                args.add("-Source");
-                args.add(_repository);
-                args.add("-Prerelease");
-                args.add("-AllVersions");
-                args.add("-NonInteractive");
+                    List<String> args = new ArrayList<>();
+                    args.add("list");
+                    args.add(info._packageId);
+                    args.add("-Source");
+                    args.add(_repository);
+                    args.add("-Prerelease");
+                    args.add("-AllVersions");
+                    args.add("-NonInteractive");
 
-                execSpec.setArgs(args);
-                execSpec.setStandardOutput(out);
-            });
+                    execSpec.setArgs(args);
+                    execSpec.setStandardOutput(out);
+                });
+            } catch (Throwable t) {
+                LOGGER.error(out.toString());
+                LOGGER.error(err.toString());
+                LOGGER.error("", t);
+                throw new RuntimeException(t);
+            }
 
             String output = out.toString();
             return output.contains(info._version);
@@ -129,28 +140,37 @@ public class Publish extends DotnetDefaultTask {
     }
 
     private File doPack(File file) {
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream err = new ByteArrayOutputStream()) {
             DotnetExtension ext = getExtension();
-            getProject().exec(execSpec -> {
-                execSpec.setExecutable(ext.getExecutable());
+            try {
+                getProject().exec(execSpec -> {
+                    execSpec.setExecutable(ext.getExecutable());
 
-                List<String> args = new ArrayList<>();
-                args.add("pack");
-                args.add(quote(file.getAbsolutePath()));
-                whenHasValue(ext.getConfiguration(), addNamedParameter(args, "--configuration"));
-                whenHasValue(ext.getRuntime(), addNamedParameter(args, "--runtime"));
-                args.add("--no-restore");
-                args.add("--no-build");
-                when(_includeSymbols, addParameter(args,"--include-symbols"));
-                when(_includeSource, addParameter(args,"--include-symbols"));
+                    List<String> args = new ArrayList<>();
+                    args.add("pack");
+                    args.add(quote(file.getAbsolutePath()));
+                    whenHasValue(ext.getConfiguration(), addNamedParameter(args, "--configuration"));
+                    whenHasValue(ext.getRuntime(), addNamedParameter(args, "--runtime"));
+                    args.add("--no-restore");
+                    args.add("--no-build");
+                    when(_includeSymbols, addParameter(args, "--include-symbols"));
+                    when(_includeSource, addParameter(args, "--include-symbols"));
 
-                for (AttributeValue av : _parameters) {
-                    args.add(String.format("/p:%s=\"%s\"", av._attribute, av._value));
-                }
+                    for (AttributeValue av : _parameters) {
+                        args.add(String.format("/p:%s=\"%s\"", av._attribute, av._value));
+                    }
 
-                execSpec.setArgs(args);
-                execSpec.setStandardOutput(out);
-            });
+                    execSpec.setArgs(args);
+                    execSpec.setStandardOutput(out);
+                    execSpec.setErrorOutput(err);
+                });
+            } catch (Throwable t) {
+                LOGGER.error(out.toString());
+                LOGGER.error(err.toString());
+                LOGGER.error("", t);
+                throw new RuntimeException(t);
+            }
 
             String output = out.toString();
             String fileExt = ".nupkg";
@@ -161,12 +181,12 @@ public class Publish extends DotnetDefaultTask {
             Matcher matcher = pattern.matcher(output);
             if (matcher.find()) {
                 String packagePath = matcher.group(1);
-                System.out.println(String.format("Package '%s' created.", packagePath));
+                LOGGER.info("Package '{}' created.", packagePath);
                 return new File(packagePath);
             }
             return null;
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
+        } catch (IOException t) {
+            throw new RuntimeException(t);
         }
     }
 
@@ -175,7 +195,7 @@ public class Publish extends DotnetDefaultTask {
             throw new RuntimeException("Failed to generate nuget package. Nothing to publish.");
         }
 
-        System.out.println(String.format("Publishing '%s' to repository '%s'", file.getAbsoluteFile(), _repository));
+        LOGGER.info("Publishing '{}' to repository '{}'", file.getAbsoluteFile(), _repository);
         DotnetExtension ext = getExtension();
         getProject().exec(execSpec -> {
             execSpec.setExecutable(ext.getExecutable());
