@@ -30,7 +30,7 @@ dependencies {
 
 // Unless overridden in the pluginBundle config DSL, the project version will
 // be used as your plugin version when publishing
-version = "0.2.10"
+version = "0.2.11"
 group = "net.karlmartens.dotnet"
 
 // The configuration example below shows the minimum required properties

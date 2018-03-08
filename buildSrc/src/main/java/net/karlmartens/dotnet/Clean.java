@@ -27,6 +27,16 @@ public class Clean extends DotnetDefaultTask {
 
         cleanTestResults(ext.getSolution());
         whenHasValue(ext.getDocsSrc(), this::cleanDocs);
+        cleanPackages();
+    }
+
+    private void cleanPackages() {
+        DotnetExtension ext = getExtension();
+
+        File projectDir = getProject().getProjectDir();
+        getProject().fileTree(projectDir.toString(), t -> {
+            t.include(ext.getPackagePattern());
+        }).forEach(File::delete);
     }
 
     private void cleanTestResults(String solution) {

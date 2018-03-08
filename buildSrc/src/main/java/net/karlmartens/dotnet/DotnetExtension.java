@@ -12,6 +12,7 @@ public class DotnetExtension {
     private String _solution = "";
     private String _projectPattern = "**/*.csproj";
     private String _testPattern = "**/*Test.csproj";
+    private String _packagePattern = "**/*.nupkg";
     private String _docsHome = null;
     private String _docsSrc = "./docs/docfx.json";
     private String _framework = null;
@@ -82,6 +83,14 @@ public class DotnetExtension {
 
     public void setTestPattern(String pattern) {
         _testPattern = pattern;
+    }
+
+    public String getPackagePattern() {
+        return _packagePattern;
+    }
+
+    public void setPackagePatter(String pattern) {
+        _packagePattern = pattern;
     }
 
     public String getDocsHome() {

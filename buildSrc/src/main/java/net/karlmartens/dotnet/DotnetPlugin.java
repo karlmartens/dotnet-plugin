@@ -8,13 +8,14 @@ import java.util.Arrays;
 
 public class DotnetPlugin implements Plugin<Project> {
 
-    private static final String INFO_TASK = "dotnetInfo";
-    private static final String CLEAN_TASK = "dotnetClean";
-    private static final String RESTORE_TASK = "dotnetRestore";
-    private static final String COMPILE_TASK = "dotnetCompile";
-    private static final String TEST_TASK = "dotnetTest";
-    private static final String DOCS_TASK = "dotnetDocs";
-    private static final String PUBLISH_TASK = "dotnetPublish";
+    private static final String INFO_TASK = "info";
+    private static final String CLEAN_TASK = "clean";
+    private static final String RESTORE_TASK = "restore";
+    private static final String COMPILE_TASK = "compileDotnet";
+    private static final String TEST_TASK = "test";
+    private static final String DOCS_TASK = "docs";
+    private static final String ASSEMBLE_TASK = "assemble";
+    private static final String PUBLISH_TASK = "publish";
 
     @Override
     public void apply(Project project) {
@@ -44,19 +45,17 @@ public class DotnetPlugin implements Plugin<Project> {
             task.setExtension(extension);
             task.setDependsOn(Arrays.asList(COMPILE_TASK));
         });
-        tasks.create(PUBLISH_TASK, Publish.class, task -> {
+        tasks.create(ASSEMBLE_TASK, Pack.class, task -> {
             task.setExtension(extension);
             task.setDependsOn(Arrays.asList(TEST_TASK));
         });
-
-        tasks.create("clean", task -> {
-           task.setDependsOn(Arrays.asList(CLEAN_TASK));
+        tasks.create(PUBLISH_TASK, Publish.class, task -> {
+            task.setExtension(extension);
+            task.setDependsOn(Arrays.asList(ASSEMBLE_TASK));
         });
+
         tasks.create("build", task -> {
             task.setDependsOn(Arrays.asList(COMPILE_TASK));
-        });
-        tasks.create("publish", task -> {
-            task.setDependsOn(Arrays.asList(PUBLISH_TASK));
         });
     }
 }

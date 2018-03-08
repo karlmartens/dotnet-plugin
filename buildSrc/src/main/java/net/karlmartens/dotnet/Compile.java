@@ -20,6 +20,7 @@ public class Compile extends DotnetDefaultTask {
             whenHasValue(ext.getFramework(), addNamedParameter(args, "--framework"));
             whenHasValue(ext.getRuntime(), addNamedParameter(args, "--runtime"));
             args.add("--no-restore");
+            appendParameters(args);
 
             execSpec.setArgs(args);
         });
