@@ -11,7 +11,7 @@ public class DotnetExtension {
     private String _dotnetHome = null;
     private String _solution = "";
     private String _projectPattern = "**/*.csproj";
-    private String _testPattern = "**/*Test.csproj";
+    private String _testPattern = "**/*.tests.csproj";
     private String _packagePattern = "**/*.nupkg";
     private String _framework = null;
     private String _runtime = null;
