@@ -13,14 +13,11 @@ public class DotnetExtension {
     private String _projectPattern = "**/*.csproj";
     private String _testPattern = "**/*Test.csproj";
     private String _packagePattern = "**/*.nupkg";
-    private String _docsHome = null;
-    private String _docsSrc = "./docs/docfx.json";
     private String _framework = null;
     private String _runtime = null;
 
     public DotnetExtension() {
         _dotnetHome = System.getenv("DOTNET_HOME");
-        _docsHome = System.getenv("DOCFX_HOME");
     }
 
 
@@ -89,35 +86,8 @@ public class DotnetExtension {
         return _packagePattern;
     }
 
-    public void setPackagePatter(String pattern) {
+    public void setPackagePattern(String pattern) {
         _packagePattern = pattern;
     }
 
-    public String getDocsHome() {
-        return _docsHome;
-    }
-
-    public void setDocsHome(String path) {
-        _docsHome = path;
-    }
-
-    public String getDocsExecutable() {
-        String executable = "docfx";
-        if (Os.isFamily(Os.FAMILY_WINDOWS))
-            executable += ".exe";
-
-        if (_docsHome == null)
-            return executable;
-
-        Path path = Paths.get(_docsHome, executable);
-        return path.toString();
-    }
-
-    public String getDocsSrc() {
-        return _docsSrc;
-    }
-
-    public void setDocsSrc(String src) {
-        _docsSrc = src;
-    }
 }

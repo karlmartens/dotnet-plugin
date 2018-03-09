@@ -26,7 +26,6 @@ public class Clean extends DotnetDefaultTask {
         });
 
         cleanTestResults(ext.getSolution());
-        whenHasValue(ext.getDocsSrc(), this::cleanDocs);
         cleanPackages();
     }
 
@@ -44,14 +43,5 @@ public class Clean extends DotnetDefaultTask {
         getProject().fileTree(baseDir, t -> {
             t.include("TestResults/**/*.trx");
         }).forEach(File::delete);
-    }
-
-    private void cleanDocs(String docsSrc) {
-        String baseDir = directoryName(docsSrc);
-        getProject().fileTree(baseDir, t -> {
-            t.include("api/*.yml");
-        }).forEach(File::delete);
-
-        getProject().delete(baseDir + "/_site");
     }
 }

@@ -13,7 +13,6 @@ public class DotnetPlugin implements Plugin<Project> {
     private static final String RESTORE_TASK = "restore";
     private static final String COMPILE_TASK = "compileDotnet";
     private static final String TEST_TASK = "test";
-    private static final String DOCS_TASK = "docs";
     private static final String ASSEMBLE_TASK = "assemble";
     private static final String PUBLISH_TASK = "publish";
 
@@ -38,10 +37,6 @@ public class DotnetPlugin implements Plugin<Project> {
             task.setDependsOn(Arrays.asList(CLEAN_TASK, RESTORE_TASK));
         });
         tasks.create(TEST_TASK, Test.class, task -> {
-            task.setExtension(extension);
-            task.setDependsOn(Arrays.asList(COMPILE_TASK));
-        });
-        tasks.create(DOCS_TASK, Docs.class, task -> {
             task.setExtension(extension);
             task.setDependsOn(Arrays.asList(COMPILE_TASK));
         });
